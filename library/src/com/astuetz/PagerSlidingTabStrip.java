@@ -469,11 +469,6 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 
 		@Override
 		public void onPageSelected(int position) {
-			if (mDisabledTabs != null && mDisabledTabs.contains(position)) {
-				pager.setCurrentItem(position
-						+ (position - mCurrentPagePosition), true);
-				return;
-			}
 
 			if (pager.getAdapter() instanceof IconTabProvider) {
 				replaceIconTab(mCurrentPagePosition,
@@ -492,21 +487,6 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 			}
 		}
 
-	}
-
-	private Set<Integer> mDisabledTabs;
-
-	public void setDisabledTabs(Set<Integer> disabledTabs) {
-		mDisabledTabs = disabledTabs;
-//		for (int index : disabledTabs) {
-//			disableTab(index);
-//		}
-	}
-
-	private void disableTab(int index) {
-		View tab = tabsContainer.getChildAt(index);
-		tab.setBackgroundColor(Color.DKGRAY);
-		tab.setOnClickListener(null);
 	}
 
 	public void setIndicatorColor(int indicatorColor) {
