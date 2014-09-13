@@ -16,12 +16,14 @@
 
 package com.astuetz;
 
-import android.graphics.Color;
+import java.util.Locale;
+import java.util.Set;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.Rect;
@@ -34,6 +36,7 @@ import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -43,9 +46,8 @@ import android.widget.ImageButton;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
 import com.astuetz.pagerslidingtabstrip.R;
-import java.util.Locale;
-import java.util.Set;
 
 public class PagerSlidingTabStrip extends HorizontalScrollView {
 
@@ -56,10 +58,8 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 	}
 
 	// @formatter:off
-	private static final int[] ATTRS = new int[] {
-		android.R.attr.textSize,
-		android.R.attr.textColor
-    };
+	private static final int[] ATTRS = new int[] { android.R.attr.textSize,
+			android.R.attr.textColor };
 	// @formatter:on
 
 	private LinearLayout.LayoutParams defaultTabLayoutParams;
@@ -85,6 +85,8 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 
 	private boolean shouldExpand = false;
 	private boolean textAllCaps = true;
+	private boolean yekanFont = false;
+	private boolean rtl = false;
 
 	private int scrollOffset = 52;
 	private int indicatorHeight = 8;
@@ -199,9 +201,11 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 						scrollOffset);
 		textAllCaps = a.getBoolean(
 				R.styleable.PagerSlidingTabStrip_pstsTextAllCaps, textAllCaps);
+		yekanFont = a.getBoolean(
+				R.styleable.PagerSlidingTabStrip_pstsYekanFont, yekanFont);
+		rtl = a.getBoolean(R.styleable.PagerSlidingTabStrip_pstsRTL, rtl);
 
 		a.recycle();
-
 		rectPaint = new Paint();
 		rectPaint.setAntiAlias(true);
 		rectPaint.setStyle(Style.FILL);
@@ -242,7 +246,6 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 		tabsContainer.removeAllViews();
 
 		tabCount = pager.getAdapter().getCount();
-
 		for (int i = 0; i < tabCount; i++) {
 
 			if (pager.getAdapter() instanceof IconTabProvider) {
@@ -255,7 +258,12 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 							((IconTabProvider) pager.getAdapter())
 									.getPageIconResId(i));
 			} else {
-				addTextTab(i, pager.getAdapter().getPageTitle(i).toString());
+				if (rtl)
+					addTextTab(i,
+							pager.getAdapter().getPageTitle(tabCount - i - 1)
+									.toString());
+				else
+					addTextTab(i, pager.getAdapter().getPageTitle(i).toString());
 			}
 
 		}
@@ -352,9 +360,25 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 								.toUpperCase(locale));
 					}
 				}
+
+				if (yekanFont) {
+					tab.setTypeface(getYekan(getContext()));
+				}
 			}
 		}
 
+	}
+
+	private static Typeface YEKAN_FONT;
+	public static final String YEKAN = "Yekan.ttf";
+
+	public static Typeface getYekan(Context context) {
+		if (YEKAN_FONT == null) {
+			YEKAN_FONT = Typeface.createFromAsset(context.getAssets(), "fonts/"
+					+ YEKAN);
+		}
+
+		return YEKAN_FONT;
 	}
 
 	private void scrollToChild(int position, int offset) {
@@ -469,6 +493,11 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 
 		@Override
 		public void onPageSelected(int position) {
+			if (mDisabledTabs != null && mDisabledTabs.contains(position)) {
+				pager.setCurrentItem(position
+						+ (position - mCurrentPagePosition), true);
+				return;
+			}
 
 			if (pager.getAdapter() instanceof IconTabProvider) {
 				replaceIconTab(mCurrentPagePosition,
@@ -487,6 +516,21 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 			}
 		}
 
+	}
+
+	private Set<Integer> mDisabledTabs;
+
+	public void setDisabledTabs(Set<Integer> disabledTabs) {
+		mDisabledTabs = disabledTabs;
+		// for (int index : disabledTabs) {
+		// disableTab(index);
+		// }
+	}
+
+	private void disableTab(int index) {
+		View tab = tabsContainer.getChildAt(index);
+		tab.setBackgroundColor(Color.DKGRAY);
+		tab.setOnClickListener(null);
 	}
 
 	public void setIndicatorColor(int indicatorColor) {
@@ -630,6 +674,11 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 		return tabPadding;
 	}
 
+	public void setGrayStrip() {
+		tabIndicator = getResources()
+				.getDrawable(R.drawable.tab_indicator_gray);
+	}
+
 	@Override
 	public void onRestoreInstanceState(Parcelable state) {
 		SavedState savedState = (SavedState) state;
@@ -675,6 +724,10 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 				return new SavedState[size];
 			}
 		};
+	}
+
+	public boolean getRTL() {
+		return rtl;
 	}
 
 }
