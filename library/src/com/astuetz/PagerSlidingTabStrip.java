@@ -66,10 +66,19 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 	private LinearLayout.LayoutParams expandedTabLayoutParams;
 
 	private final PageListener pageListener = new PageListener();
+	
+	public PageListener getPageListener() {
+		return pageListener;
+	}
+	
 	public OnPageChangeListener delegatePageListener;
 
 	private LinearLayout tabsContainer;
 	private ViewPager pager;
+	
+	public ViewPager getPager() {
+		return pager;
+	}
 
 	private int tabCount;
 
